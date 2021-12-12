@@ -1,3 +1,5 @@
+
+#pragma once
 #include <iostream>
 #include <string>
 #include <filesystem>
@@ -8,38 +10,32 @@ class directory {
 private:
 
 	std::string _directory_name;
-	std::vector<const std::string> _vector_of_paths;
-	int _files;
-	int _directories;
-	int _rows;
-	int _full_rows;
-	int _empty_rows;
-	int _works;
-	int _letters;
-
+	
 public:
 
-	void set_name() {
+	void set_directory_name() {
 	
 		std::cout << "Enter name of directory, which you want to list: ";
 		std::cin >> _directory_name;
 	}
 
-	void list_directory() {
+	std::vector<std::filesystem::path>  list_directory() {
 
 		auto dir = std::filesystem::recursive_directory_iterator(_directory_name);
+		std::vector<std::filesystem::path> vector_of_paths;
 
-		for (const auto& dir_entry : dir) {
-			_vector_of_paths.push_back(dir_entry.path().string());
+		for (auto& dir_entry : dir) {
+			vector_of_paths.push_back(dir_entry.path());
 		}
+		return vector_of_paths;
 	}
 
-	void print_directory_list() {
+	void print_directory_list(std::vector<std::filesystem::path> vector_of_paths) {
 	
-		std::cout << " Directory content list: " << std::endl;
+		std::cout << "Directory content list: " << std::endl << std::endl;
 
-		for (auto element : _vector_of_paths) {
-			std::cout << element;
+		for (auto element : vector_of_paths) {
+			std::cout << element.string() << std::endl;
 		}	
 	}
 
