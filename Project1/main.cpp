@@ -1,8 +1,10 @@
 #include "directory.h"
 #include "counting.h"
 
-int main() {
 
+int main() {
+    
+    
     directory dir;
    
     dir.set_directory_name();
@@ -22,4 +24,8 @@ int main() {
     counting_class.get_number_of_words();
     counting_class.count_all_letters();
     counting_class.get_number_of_letters();
+
+   
+
+
 }

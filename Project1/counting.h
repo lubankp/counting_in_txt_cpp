@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <vector>
 #include "file.h"
-
+#include "thread_pool.hpp"
 
 class counting {
 
@@ -23,8 +23,12 @@ public:
 
 	counting(std::vector<std::filesystem::path> vector_of_paths) : _vector_of_paths(vector_of_paths) {};
 
+
+
 	void count_files() {
 	
+		
+
 		for (auto element : _vector_of_paths) {
 		
 			if (element.extension() != "") {
@@ -62,65 +66,99 @@ public:
 		return number_of_lines;
 	}
 
-	int count_words(std::vector <std::string> file_text) {
-
-		int number_of_words = 0;
-
-		for (auto line : file_text) {
-			for (auto charcter : line) {
-				if (charcter == ' ') {
-					number_of_words++;
-				}
-			}
-			number_of_words++;
-		}
-		return number_of_words + 1;
-	}
-
-	int count_letters(std::vector <std::string> file_text) {
-
-		int number_of_letters = 0;
-
-		for (auto line : file_text) {
-			for (auto charcter : line) {
-				if (isalpha(charcter)) {
-					number_of_letters++;
-				}
-			}
-		}
-		return number_of_letters;
-	}
-
 	void count_all_letters() {
 
-		for (auto element : _vector_of_files_paths) {
+			thread_pool pool1(10);
+			int number_of_letters = 0;
+			std::vector<std::filesystem::path> vector_of_files_paths = get_vector_of_files_paths();
 
-			file myfile;
-			myfile.open_file(element.string());
-			_number_of_letters += count_letters(myfile.get_file_text());
-		}
+			auto lambda1 = [&vector_of_files_paths, &number_of_letters](auto& a, auto& b)
+			{
+				for (auto i = a; i < b; i++) {
+
+					file myfile;
+					myfile.open_file(vector_of_files_paths[i].string());
+					std::vector <std::string> file_text = myfile.get_file_text();
+
+					for (auto line : file_text) {
+						for (auto charcter : line) {
+							if (isalpha(charcter)) {
+								number_of_letters++;
+							}
+						}
+					}
+
+				}
+			};
+			pool1.parallelize_loop(0, _vector_of_files_paths.size(), lambda1, 1);
+			_number_of_letters = number_of_letters;
+			
 	}
 
 	void count_all_words() {
 
-		for (auto element : _vector_of_files_paths) {
+		thread_pool pool2(10);
+		int number_of_words = 0;
+		std::vector<std::filesystem::path> vector_of_files_paths = get_vector_of_files_paths();
 
-			file myfile;
-			myfile.open_file(element.string());
-			_number_of_words += count_words(myfile.get_file_text());
-		}
+		auto lambda2 = [&vector_of_files_paths, &number_of_words](auto& a, auto& b){
+			for (auto i = a; i < b; i++) {
+
+				file myfile;
+				myfile.open_file(vector_of_files_paths[i].string());
+				std::vector <std::string> file_text = myfile.get_file_text();
+
+					for (auto line : file_text) {
+						for (auto charcter : line) {
+							if (charcter == ' ') {
+								number_of_words++;
+							}
+						}
+						number_of_words++;
+					}
+
+			}
+		};
+		pool2.parallelize_loop(0, _vector_of_files_paths.size(), lambda2, 1);
+		_number_of_words = number_of_words;
 	}
 
 	void count_all_lines() {
 
-		for (auto element : _vector_of_files_paths) {
+		thread_pool pool2(10);
+		int number_of_lines = 0;
+		int number_of_empty_lines = 0;
+		int number_of_full_lines = 0;
+		std::vector<std::filesystem::path> vector_of_files_paths = get_vector_of_files_paths();
 
-			file myfile;
-			myfile.open_file(element.string());
-			_number_of_lines += count_lines(myfile.get_file_text());
-		}
+		auto lambda3 = [&vector_of_files_paths, &number_of_lines, &number_of_empty_lines, &number_of_full_lines](auto& a, auto& b) {
+			for (auto i = a; i < b; i++) {
+
+				file myfile;
+				myfile.open_file(vector_of_files_paths[i].string());
+				std::vector <std::string> file_text = myfile.get_file_text();
+
+				for (auto line : file_text) {
+					number_of_lines++;
+					if (line.empty()) {
+						number_of_empty_lines++;
+					}
+					else {
+						number_of_full_lines++;
+					}
+				}
+
+			}
+		};
+		pool2.parallelize_loop(0, _vector_of_files_paths.size(), lambda3, 1);
+		_number_of_lines = number_of_lines;
+		_number_of_empty_lines = number_of_empty_lines;
+		_number_of_full_lines = number_of_full_lines;
 	}
 
+	std::vector<std::filesystem::path> get_vector_of_files_paths() {
+		return _vector_of_files_paths;
+	}
 
 	void get_number_of_files() { 
 		std::cout << "Number of files: " << _number_of_files << std::endl;
